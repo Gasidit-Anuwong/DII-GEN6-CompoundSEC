@@ -14,12 +14,13 @@ public class CardManagementGUI extends JFrame {
     private final JTextField moveCodeField;
 
     public CardManagementGUI() {
-        setTitle("Condo Access Card Management");
+        setTitle("Condo.EXE");
         setSize(400, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
         // Panel สำหรับกรอกข้อมูล
+
         JPanel inputPanel = new JPanel(new GridLayout(3, 2));
         inputPanel.add(new JLabel("Name:"));
         nameField = new JTextField();
@@ -42,19 +43,22 @@ public class CardManagementGUI extends JFrame {
         addButton.addActionListener(e -> addCard());
         add(addButton, BorderLayout.CENTER);
 
-        // ปุ่มสำหรับย้ายห้อง
-        moveButton = new JButton("Move Room");
-        moveButton.addActionListener(e -> moveCard());
-        add(moveButton, BorderLayout.SOUTH);
-
         // Panel สำหรับการย้ายห้อง
         JPanel movePanel = new JPanel(new FlowLayout());
         movePanel.add(new JLabel("Enter Move Code:"));
         moveCodeField = new JTextField(10);
         movePanel.add(moveCodeField);
+
+        // ปุ่มสำหรับย้ายห้อง
+        moveButton = new JButton("Move Room");
+        moveButton.addActionListener(e -> moveCard());
+        movePanel.add(moveButton);
         add(movePanel, BorderLayout.SOUTH);
 
+
+
         // List แสดงบัตรทั้งหมด
+
         listModel = new DefaultListModel<>();
         cardList = new JList<>(listModel);
         add(new JScrollPane(cardList), BorderLayout.SOUTH);
@@ -74,6 +78,7 @@ public class CardManagementGUI extends JFrame {
         }
 
         // เช็คว่าห้องนี้มีเจ้าของอยู่แล้วหรือไม่
+
         if (occupiedRooms.contains(roomKey)) {
             JOptionPane.showMessageDialog(this, "Room " + room + " on floor " + floor + " is already occupied!", "Error", JOptionPane.ERROR_MESSAGE);
             return;

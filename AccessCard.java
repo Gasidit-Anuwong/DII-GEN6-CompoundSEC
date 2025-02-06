@@ -13,8 +13,19 @@ public class AccessCard {
         return ownerName;
     }
 
+
+
+    public int setFloor(){
+        return room;
+    }
     public int getFloor() {
         return floor;
+    }
+
+
+
+    public int setRoom(){
+        return room;
     }
 
     public int getRoom() {

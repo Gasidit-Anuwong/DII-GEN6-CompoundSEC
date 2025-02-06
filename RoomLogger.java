@@ -11,7 +11,7 @@ public class RoomLogger {
 
         try {
             File file = new File("room_" + roomKey + ".txt");
-            FileWriter writer = new FileWriter(file, true); // Append mode
+            FileWriter writer = new FileWriter(file, true); 
             writer.write(activity + " at " + timeStamp + "\n");
             writer.close();
         } catch (IOException e) {
