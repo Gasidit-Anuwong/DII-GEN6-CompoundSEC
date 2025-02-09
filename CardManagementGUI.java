@@ -1,61 +1,98 @@
+import java.awt.*;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import javax.swing.*;
 
 public class CardManagementGui extends JFrame {
-    private final JButton addRoomButton;
-    private final JComboBox<String> roomSelector; // ใช้ JComboBox สำหรับเลือกห้อง
-    private final JTextField userNameField;
+    // UI Components
     private final JComboBox<String> floorSelector;
-    private final Map<String, Set<String>> occupiedRooms; // เก็บข้อมูลห้องที่ถูกใช้แล้ว
+    private final JComboBox<String> roomSelector;
+    private final JTextField userNameField;
+    private final JPasswordField authCodeField;
+    private final JButton addRoomButton;
+    private final JButton moveRoomButton;
+    private final JButton cancelRoomButton;
+    
+    // Map สำหรับเก็บข้อมูลห้องที่ถูกจองแล้ว
+    private final Map<String, Set<String>> occupiedRooms;
+
+    // กำหนดรหัสสำหรับการยืนยัน (Authentication Code)
+    private static final String AUTH_CODE = "admin123";
 
     public CardManagementGui() {
-        setTitle("Card Management");
-        setSize(400, 250);
+        setTitle("Card Management System");
+        setExtendedState(JFrame.MAXIMIZED_BOTH); // Fullscreen
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+        setLayout(new GridBagLayout()); // จัดให้อยู่ตรงกลาง
 
-        occupiedRooms = new HashMap<>(); // ใช้เก็บข้อมูลห้องที่ถูกใช้แล้ว
-        loadOccupiedRooms(); // โหลดข้อมูลห้องที่ถูกใช้แล้ว
+        occupiedRooms = new HashMap<>();
+        loadOccupiedRooms();
 
-        JPanel panel = new JPanel();
-        userNameField = new JTextField(10);
+        // สร้าง UI Components
+        userNameField = new JTextField(15);
+        authCodeField = new JPasswordField(15);
         addRoomButton = new JButton("Add Room");
+        moveRoomButton = new JButton("Move Room");
+        cancelRoomButton = new JButton("Cancel Room");
 
-        // Dropdown สำหรับเลือกชั้น (1-8)
         String[] floors = {"1", "2", "3", "4", "5", "6", "7", "8"};
         floorSelector = new JComboBox<>(floors);
-
-        // Dropdown สำหรับเลือกห้อง (จะอัปเดตตามชั้นที่เลือก)
         roomSelector = new JComboBox<>();
-
-        panel.add(new JLabel("Select Floor:"));
-        panel.add(floorSelector);
-        panel.add(new JLabel("Select Room:"));
-        panel.add(roomSelector);
-        panel.add(new JLabel("User Name:"));
-        panel.add(userNameField);
-        panel.add(addRoomButton);
-
-        add(panel);
-
-        // เมื่อเปลี่ยนชั้น ให้โหลดห้องที่ยังว่างอยู่
+        
+        // สร้าง BackgroundPanel สำหรับวาด Background Image
+        BackgroundPanel backgroundPanel = new BackgroundPanel("background.jpg");
+        backgroundPanel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        
+        // แถวที่ 0: Select Floor & Select Room
+        gbc.gridx = 0; gbc.gridy = 0;
+        backgroundPanel.add(new JLabel("Select Floor:"), gbc);
+        gbc.gridx = 1;
+        backgroundPanel.add(floorSelector, gbc);
+        gbc.gridx = 2;
+        backgroundPanel.add(new JLabel("Select Room:"), gbc);
+        gbc.gridx = 3;
+        backgroundPanel.add(roomSelector, gbc);
+        
+        // แถวที่ 1: User Name
+        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 4;
+        backgroundPanel.add(new JLabel("User Name:"), gbc);
+        gbc.gridy = 2;
+        backgroundPanel.add(userNameField, gbc);
+        
+        // แถวที่ 2: Auth Code
+        gbc.gridy = 3;
+        backgroundPanel.add(new JLabel("Auth Code:"), gbc);
+        gbc.gridy = 4;
+        backgroundPanel.add(authCodeField, gbc);
+        
+        // แถวที่ 3: ปุ่มต่างๆ (Add, Move, Cancel)
+        gbc.gridy = 5;
+        backgroundPanel.add(addRoomButton, gbc);
+        gbc.gridy = 6;
+        backgroundPanel.add(moveRoomButton, gbc);
+        gbc.gridy = 7;
+        backgroundPanel.add(cancelRoomButton, gbc);
+        
+        add(backgroundPanel); // เพิ่ม BackgroundPanel ลงใน Frame
+        
+        // Event Listeners
         floorSelector.addActionListener(e -> updateAvailableRooms());
-
         addRoomButton.addActionListener(e -> addRoom());
-
-        // โหลดห้องที่ว่างสำหรับชั้นเริ่มต้น
-        updateAvailableRooms();
+        moveRoomButton.addActionListener(e -> moveRoom());
+        cancelRoomButton.addActionListener(e -> cancelRoom());
+        
+        updateAvailableRooms(); // โหลดห้องที่ว่างครั้งแรก
     }
 
-    // โหลดข้อมูลห้องที่ถูกใช้งานจากไฟล์
+    // โหลดข้อมูลห้องที่ถูกใช้งานจากไฟล์ในแต่ละชั้น
     private void loadOccupiedRooms() {
-        for (int i = 1; i <= 8; i++) { // วนลูปทุกชั้น
+        for (int i = 1; i <= 8; i++) {
             String floorFolder = "floor_" + i;
             File directory = new File(floorFolder);
             Set<String> rooms = new HashSet<>();
-
             if (directory.exists() && directory.isDirectory()) {
                 for (File file : Objects.requireNonNull(directory.listFiles())) {
                     if (file.isFile() && file.getName().endsWith(".txt")) {
@@ -67,67 +104,168 @@ public class CardManagementGui extends JFrame {
         }
     }
 
-    // อัปเดตรายการห้องที่ยังว่างอยู่
+    // อัปเดตรายการห้องที่ว่างตามชั้นที่เลือก
     private void updateAvailableRooms() {
-        String selectedFloor = "floor_" + floorSelector.getSelectedItem().toString();
         roomSelector.removeAllItems();
-
+        String selectedFloor = "floor_" + floorSelector.getSelectedItem().toString();
         Set<String> occupied = occupiedRooms.getOrDefault(selectedFloor, new HashSet<>());
         for (int i = 1; i <= 20; i++) {
             String roomNumber = String.valueOf(i);
             if (!occupied.contains(roomNumber)) {
-                roomSelector.addItem(roomNumber); // เพิ่มเฉพาะห้องที่ยังว่างอยู่
+                roomSelector.addItem(roomNumber);
             }
         }
     }
 
+    // ฟังก์ชันเพิ่มห้องใหม่ (จองห้อง)
     private void addRoom() {
         if (roomSelector.getItemCount() == 0) {
             JOptionPane.showMessageDialog(this, "No available rooms on this floor.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
-        String roomName = roomSelector.getSelectedItem().toString();
+        String roomNumber = roomSelector.getSelectedItem().toString();
         String userName = userNameField.getText().trim();
         String selectedFloor = "floor_" + floorSelector.getSelectedItem().toString();
-
+        
         if (userName.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please enter a user name", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
+        
         File directory = new File(selectedFloor);
         if (!directory.exists()) {
             directory.mkdirs();
         }
-
-        saveRoomInfoToFile(selectedFloor, roomName, userName);
-
-        // อัปเดตว่า ห้องนี้ถูกใช้แล้ว
-        occupiedRooms.computeIfAbsent(selectedFloor, k -> new HashSet<>()).add(roomName);
-        updateAvailableRooms(); // รีเฟรชรายชื่อห้อง
-
+        
+        saveRoomInfoToFile(selectedFloor, roomNumber, userName, "Added");
+        occupiedRooms.computeIfAbsent(selectedFloor, k -> new HashSet<>()).add(roomNumber);
+        updateAvailableRooms();
         JOptionPane.showMessageDialog(this, "Room added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private void saveRoomInfoToFile(String folder, String roomName, String userName) {
+    // ฟังก์ชันย้ายห้อง (ต้องผ่านการตรวจสอบ Auth Code)
+    private void moveRoom() {
+        // ตรวจสอบรหัส Authentication ก่อน
+        String enteredCode = new String(authCodeField.getPassword());
+        if (!enteredCode.equals(AUTH_CODE)) {
+            JOptionPane.showMessageDialog(this, "Invalid Auth Code!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // ขอให้ผู้ใช้กรอกข้อมูลห้องเดิมที่ใช้งานอยู่
+        String currentFloorInput = JOptionPane.showInputDialog(this, "Enter your CURRENT floor number:");
+        String currentRoomInput = JOptionPane.showInputDialog(this, "Enter your CURRENT room number:");
+        if (currentFloorInput == null || currentRoomInput == null ||
+            currentFloorInput.trim().isEmpty() || currentRoomInput.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Current floor and room are required.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        String oldFloorKey = "floor_" + currentFloorInput.trim();
+        String oldRoom = currentRoomInput.trim();
+        Set<String> oldOccupied = occupiedRooms.getOrDefault(oldFloorKey, new HashSet<>());
+        if (!oldOccupied.contains(oldRoom)) {
+            JOptionPane.showMessageDialog(this, "You are not assigned to that room!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // ใช้ข้อมูลจาก UI สำหรับห้องใหม่
+        String newFloorKey = "floor_" + floorSelector.getSelectedItem().toString();
+        String newRoom = roomSelector.getSelectedItem() != null ? roomSelector.getSelectedItem().toString() : null;
+        if (newRoom == null) {
+            JOptionPane.showMessageDialog(this, "No available new room on the selected floor.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        Set<String> newOccupied = occupiedRooms.getOrDefault(newFloorKey, new HashSet<>());
+        if (newOccupied.contains(newRoom)) {
+            JOptionPane.showMessageDialog(this, "The selected new room is already occupied!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        String userName = userNameField.getText().trim();
+        if (userName.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter your user name", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // ย้ายห้อง: ลบห้องเก่าออกและเพิ่มห้องใหม่
+        oldOccupied.remove(oldRoom);
+        saveRoomInfoToFile(oldFloorKey, oldRoom, userName, "Moved Out");
+        newOccupied.add(newRoom);
+        saveRoomInfoToFile(newFloorKey, newRoom, userName, "Moved In");
+        occupiedRooms.put(oldFloorKey, oldOccupied);
+        occupiedRooms.put(newFloorKey, newOccupied);
+        JOptionPane.showMessageDialog(this, "Room moved successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        updateAvailableRooms();
+    }
+
+    // ฟังก์ชันยกเลิกการจองห้อง (ต้องผ่านการตรวจสอบ Auth Code)
+    private void cancelRoom() {
+        // ตรวจสอบรหัส Authentication ก่อน
+        String enteredCode = new String(authCodeField.getPassword());
+        if (!enteredCode.equals(AUTH_CODE)) {
+            JOptionPane.showMessageDialog(this, "Invalid Auth Code!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // ขอให้ผู้ใช้กรอกข้อมูลห้องที่ต้องการยกเลิก
+        String currentFloorInput = JOptionPane.showInputDialog(this, "Enter your CURRENT floor number:");
+        String currentRoomInput = JOptionPane.showInputDialog(this, "Enter your CURRENT room number:");
+        if (currentFloorInput == null || currentRoomInput == null ||
+            currentFloorInput.trim().isEmpty() || currentRoomInput.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Current floor and room are required.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        String floorKey = "floor_" + currentFloorInput.trim();
+        String room = currentRoomInput.trim();
+        Set<String> occupied = occupiedRooms.getOrDefault(floorKey, new HashSet<>());
+        if (!occupied.contains(room)) {
+            JOptionPane.showMessageDialog(this, "You are not assigned to that room!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        String userName = userNameField.getText().trim();
+        if (userName.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter your user name", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        occupied.remove(room);
+        saveRoomInfoToFile(floorKey, room, userName, "Cancelled");
+        JOptionPane.showMessageDialog(this, "Room cancelled successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        updateAvailableRooms();
+    }
+
+    // ฟังก์ชันบันทึกข้อมูลลงไฟล์ .txt พร้อม Action และ Timestamp
+    private void saveRoomInfoToFile(String folder, String roomName, String userName, String action) {
+        File directory = new File(folder);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+        File file = new File(directory, roomName + ".txt");
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String currentTime = sdf.format(new Date());
-
-        File file = new File(folder, roomName + ".txt");
-
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
-            writer.write("User: " + userName + " | Accessed at: " + currentTime);
+            writer.write("User: " + userName + " | " + action + " at: " + currentTime);
             writer.newLine();
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "Error saving room info", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    // คลาสสำหรับวาด Background Image
+    private static class BackgroundPanel extends JPanel {
+        private final Image backgroundImage;
+
+        public BackgroundPanel(String fileName) {
+            backgroundImage = new ImageIcon(fileName).getImage();
+            setLayout(new BorderLayout());
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+        }
+    }
+
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            CardManagementGui gui = new CardManagementGui();
-            gui.setVisible(true);
-        });
+        SwingUtilities.invokeLater(() -> new CardManagementGui().setVisible(true));
     }
 }
