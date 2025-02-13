@@ -202,7 +202,7 @@ public class CardManagementGui extends JFrame {
         // ตรวจสอบรหัส Authentication ก่อน
         String enteredCode = new String(authCodeField.getPassword());
         if (!enteredCode.equals(AUTH_CODE)) {
-            JOptionPane.showMessageDialog(this, "Invalid Auth Code!", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "This line only use for admin only", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
         
