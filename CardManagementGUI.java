@@ -64,7 +64,7 @@ public class CardManagementGui extends JFrame {
         
         // แถวที่ 2: Auth Code
         gbc.gridy = 3;
-        backgroundPanel.add(new JLabel("Auth Code:"), gbc);
+        backgroundPanel.add(new JLabel("Auth Code:[ADMIN ONLY]"), gbc);
         gbc.gridy = 4;
         backgroundPanel.add(authCodeField, gbc);
         
@@ -211,7 +211,7 @@ public class CardManagementGui extends JFrame {
         String currentRoomInput = JOptionPane.showInputDialog(this, "Enter your CURRENT room number:");
         if (currentFloorInput == null || currentRoomInput == null ||
             currentFloorInput.trim().isEmpty() || currentRoomInput.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Current floor and room are required.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Current floor and room are required.", "Error", JOptionPane.ERROR_MESSAGE);     //เพิ่ม
             return;
         }
         String floorKey = "floor_" + currentFloorInput.trim();
