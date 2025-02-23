@@ -1,17 +1,20 @@
-import java.util.HashMap;
+// AccessControlSystem.java
+import java.util.ArrayList;
+import java.util.List;
 
 public class AccessControlSystem {
-    private HashMap<String, AccessCard> cardDatabase = new HashMap<>();
-
-    public void registerCard(String cardID, AccessCard card) {
-        cardDatabase.put(cardID, card);
+    private List<AccessCard> accessCards = new ArrayList<>();
+    
+    public void addCard(AccessCard card) {
+        accessCards.add(card);
     }
-
-    public boolean checkAccess(String cardID, int requestedFloor, int requestedRoom) {
-        if (!cardDatabase.containsKey(cardID)) {
-            return false;
+    
+    public boolean verifyAccess(String userName, String floor) {
+        for (AccessCard card : accessCards) {
+            if (card.getUserName().equals(userName) && card.getFloor().equals(floor)) {
+                return true;
+            }
         }
-        AccessCard card = cardDatabase.get(cardID);
-        return card.getFloor() == requestedFloor && card.getRoom() == requestedRoom;
+        return false;
     }
 }

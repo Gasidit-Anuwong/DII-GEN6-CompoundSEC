@@ -1,17 +1,17 @@
-import java.io.FileWriter;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+// CardTracking.java
+import java.util.ArrayList;
+import java.util.List;
 
 public class CardTracking {
-    private static final String LOG_FILE = "access_log.txt";
-
-    public static void logAccess(String cardID, int floor, int room) {
-        try (FileWriter writer = new FileWriter(LOG_FILE, true)) {
-            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            writer.write("Card ID: " + cardID + " accessed Floor: " + floor + ", Room: " + room + " at " + timestamp + "\n");
-        } catch (IOException e) {
-            System.out.println("Error writing to log file.");
-        }
+    private List<String> trackingLogs = new ArrayList<>();
+    
+    public void addLog(String log) {
+        trackingLogs.add(log);
     }
+    
+    public List<String> getLogs() {
+        return trackingLogs;
+    }
+    
+    // เมธอดเพิ่มเติมสำหรับค้นหาและจัดการ log สามารถเพิ่มได้ตามต้องการ
 }

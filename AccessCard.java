@@ -1,38 +1,21 @@
-public class AccessCard {
-    private final String ownerName;
-    private final int floor;
-    private final int room;
+// AccessCard.java
+import java.util.Date;
 
-    public AccessCard(String ownerName, int floor, int room) {
-        this.ownerName = ownerName;
+public class AccessCard {
+    private String userName;
+    private String floor;
+    private String room;
+    private Date issueDate;
+    
+    public AccessCard(String userName, String floor, String room) {
+        this.userName = userName;
         this.floor = floor;
         this.room = room;
+        this.issueDate = new Date();
     }
-
-    public String getOwnerName() {
-        return ownerName;
-    }
-
-
-
-    public int setFloor(){
-        return room;
-    }
-    public int getFloor() {
-        return floor;
-    }
-
-
-
-    public int setRoom(){
-        return room;
-    }
-
-    public int getRoom() {
-        return room;
-    }
-
-    public String getDetails() {
-        return "Owner: " + ownerName + ", Floor: " + floor + ", Room: " + room;
-    }
+    
+    public String getUserName() { return userName; }
+    public String getFloor() { return floor; }
+    public String getRoom() { return room; }
+    public Date getIssueDate() { return issueDate; }
 }
