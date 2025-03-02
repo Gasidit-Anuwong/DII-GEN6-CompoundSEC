@@ -7,20 +7,40 @@ import java.util.Date;
 
 public class RoomLogger {
     /**
-     * บันทึก log เหมือนเดิมในไฟล์ roomName.txt
-     * และอัปเดตสถานะของห้องในไฟล์ roomName_status.txt:
-     * - เมื่อ action เป็น "Added" หรือ "Moved In" จะสร้างไฟล์สถานะขึ้นมา
-     * - เมื่อ action เป็น "Moved Out" หรือ "Cancelled" จะลบไฟล์สถานะออก (ถ้ามี)
+     * บันทึก log และจัดการไฟล์สถานะของห้องในโฟลเดอร์
+     * 
+     * @param floorFolderName : ชื่อโฟลเดอร์ floor เช่น "floor_1"
+     * @param roomNumber      : หมายเลขห้อง (เช่น "1" สำหรับห้อง 101 เมื่ออยู่ชั้น 1)
+     * @param userName        : ชื่อผู้ใช้
+     * @param action          : Action เช่น "Added", "Moved In", "Moved Out", "Cancelled"
      */
-    public static void logRoomEvent(String folder, String roomName, String userName, String action) {
-        // บันทึก log ลงในไฟล์ roomName.txt (log ยังคงถูกเก็บไว้ตลอด)
-        File directory = new File(folder);
-        if (!directory.exists()) {
-            directory.mkdirs();
+    public static void logRoomEvent(String floorFolderName, String roomNumber, String userName, String action) {
+        // สร้างโฟลเดอร์ floor (เช่น floor_1) หากไม่มีอยู่
+        File floorDirectory = new File(floorFolderName);
+        if (!floorDirectory.exists()) {
+            floorDirectory.mkdirs();
         }
-        File logFile = new File(directory, roomName + ".txt");
+        
+        // ดึงหมายเลขชั้นออกจากชื่อโฟลเดอร์ (floor_1 => "1")
+        String floorNo = floorFolderName.substring("floor_".length());
+        int roomNum = Integer.parseInt(roomNumber);
+        // ถ้าหมายเลขห้องน้อยกว่า 10 ให้เติม 0 ข้างหน้า (1 => 01)
+        String paddedRoom = (roomNum < 10 ? "0" + roomNumber : roomNumber);
+        // สร้างชื่อโฟลเดอร์ห้อง เช่น "Room 101" (เมื่อ floorNo = "1" และ roomNumber = "1")
+        String roomFolderName = "Room " + floorNo + paddedRoom;
+        
+        // สร้างโฟลเดอร์สำหรับห้องภายในโฟลเดอร์ floor
+        File roomDirectory = new File(floorDirectory, roomFolderName);
+        if (!roomDirectory.exists()) {
+            roomDirectory.mkdirs();
+        }
+        
+        // กำหนด path สำหรับ log file ภายใน roomDirectory
+        File logFile = new File(roomDirectory, "log.txt");
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String currentTime = sdf.format(new Date());
+        
+        // บันทึก log ลงใน log.txt (append mode)
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(logFile, true))) {
             writer.write("User: " + userName + " | " + action + " at: " + currentTime);
             writer.newLine();
@@ -28,10 +48,10 @@ public class RoomLogger {
             System.err.println("Error saving room log info: " + e.getMessage());
         }
         
-        // จัดการไฟล์สถานะ (status file) สำหรับห้องนั้น
-        File statusFile = new File(directory, roomName + "_status.txt");
+        // กำหนด path สำหรับ status file ภายใน roomDirectory
+        File statusFile = new File(roomDirectory, "status.txt");
         if (action.equals("Added") || action.equals("Moved In")) {
-            // สร้างไฟล์สถานะเพื่อระบุว่าห้องนั้นถูกใช้งานอยู่
+            // สร้าง status file เพื่อบ่งบอกว่าห้องมีผู้ใช้งานอยู่
             if (!statusFile.exists()) {
                 try {
                     statusFile.createNewFile();
@@ -40,10 +60,10 @@ public class RoomLogger {
                 }
             }
         } else if (action.equals("Moved Out") || action.equals("Cancelled")) {
-            // ลบไฟล์สถานะออกเพื่อระบุว่าห้องนั้นว่างแล้ว
+            // ลบ status file เพื่อบ่งบอกว่าห้องว่างแล้ว
             if (statusFile.exists()) {
                 if (!statusFile.delete()) {
-                    System.err.println("Error deleting occupancy status file for room: " + roomName);
+                    System.err.println("Error deleting occupancy status file for room: " + roomFolderName);
                 }
             }
         }

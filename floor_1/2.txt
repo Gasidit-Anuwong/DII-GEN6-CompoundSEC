@@ -1,2 +1,0 @@
-User: test | Cancelled at: 2568-02-13 11:33:16
-User: asd | Cancelled at: 2568-02-23 18:52:48
